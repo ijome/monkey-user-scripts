@@ -13,7 +13,8 @@ $(function() {
   console.log("🐵");
 
   addCss(`
-    #left-sidebar { 
+    #left-sidebar,
+    #js-gdpr-consent-banner { 
       display: none; 
     }
   `);
