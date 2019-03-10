@@ -13,7 +13,7 @@
 const monkey = "🐵";
 const bananas = "🍌";
 
-const timeFormat = "HH:mm [h]";
+let switched = false;
 
 console.log(monkey);
 
@@ -22,13 +22,14 @@ waitForElement("#index_table", addButton);
 function addButton() {
   const buttonId = "monkey-clock";
   const buttonCss = "";
-  const buttonText = "Zeitformat ändern";
+  const buttonChangeText = "Zeitformat ändern";
+  const buttonResetText = "Zeitformat zurücksetzen";
 
   const buttonHtml = `
     <li id="${buttonId}" class="${buttonCss}"
         title="${monkey}">
         <a href="#">
-          ${buttonText}
+          ${buttonChangeText}
         </a>
       </li>
     `;
@@ -36,41 +37,63 @@ function addButton() {
   $("ul.navbar-nav").prepend(buttonHtml);
 
   $("#" + buttonId).on("click", function() {
-    changeTime();
+    if (switched) {
+      location.reload();
+    } else {
+      changeTime();
+      $(this)
+        .prop("title", bananas)
+        .find("a")
+        .text(buttonResetText);
+      switched = true;
+    }
   });
 }
 
 function changeTime() {
-  $("#index_table .entry .brutto, #index_table .entry .netto_time").each(
-    function() {
-      let node = $(this);
-      const monkeyTime = toMonkeyTime(node.text());
-      node
-        .prop("title", bananas + " " + monkeyTime.asFloat)
-        .data("monkey-time", monkeyTime)
-        .text(monkeyTime.asFormatted);
-    }
-  );
+  $(`
+  #index_table .entry .brutto, 
+  #index_table .entry .netto_time,
+  #index_table #sum_brutto,
+  #index_table #sum_pause,
+  #index_table #sum_netto
+  `).each(function() {
+    let node = $(this);
+    const monkeyTime = toMonkeyTime(node.text());
+    node
+      .prop("title", bananas + " " + monkeyTime.asFloat)
+      .data("monkey-time", monkeyTime)
+      .text(monkeyTime.asDuration);
+  });
+  $("#index_table .entry .pause").each(function() {
+    let node = $(this);
+    let textNode = node.contents().first()[0];
+    const monkeyTime = toMonkeyTime(textNode.textContent);
+    node
+      .prop("title", bananas + " " + monkeyTime.asFloat)
+      .data("monkey-time", monkeyTime);
+    textNode.textContent = monkeyTime.asDuration + " ";
+  });
 }
 
 function toMonkeyTime(floatText) {
   const asFloat = parseFloat(floatText);
-  const asMoment = decimalTimeToMoment(asFloat);
-  const asFormatted = asMoment.format(timeFormat);
+  const hours = parseInt(asFloat);
+  const decimalMinutes = asFloat - hours;
+  const minutes = Math.round(decimalMinutes * 60);
+  const asDuration = formatDuration(hours, minutes);
   return {
+    hours,
+    minutes,
     asFloat,
-    asMoment,
-    asFormatted
+    asDuration
   };
 }
 
-function decimalTimeToMoment(decimalTime) {
-  const hours = parseInt(decimalTime);
-  const decimalMinutes = decimalTime - hours;
-  const minutes = decimalMinutes * 60;
-  return moment()
-    .hours(hours)
-    .minutes(minutes);
+function formatDuration(hours, minutes) {
+  const hoursText = _.padStart(hours, 2, "0");
+  const minutesText = _.padStart(minutes, 2, "0");
+  return `${hoursText}:${minutesText} h`;
 }
 
 function waitForElement(selector, callback) {
