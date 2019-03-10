@@ -12,18 +12,19 @@
 "use strict";
 
 $(function() {
+  console.clear();
   console.log("🐵");
 
-  const js = `
-    $('#index_table .entry td.brutto').each(function() {
+  const jsAsFunction = () => {
+    $("#index_table .entry td.brutto").each(function() {
       let node = $(this);
       const decimalTime = node.html();
-      console.log({decimalTime});
+      console.log({ decimalTime });
     });
-  `;
+  };
 
   waitForElement("#index_table", () => {
-    addJs(js);
+    addJsAsFunction(jsAsFunction);
   });
 
   function waitForElement(selector, callback) {
@@ -36,15 +37,19 @@ $(function() {
     }
   }
 
-  function addCss(css) {
+  function addCssAsString(cssAsString) {
     $("<style/>", { type: "text/css" })
-      .html(css)
+      .html(cssAsString)
       .appendTo("head");
   }
 
-  function addJs(js) {
+  function addJsAsFunction(jsAsFunction) {
+    addJsAsString("(" + jsAsFunction.toString() + ")();");
+  }
+
+  function addJsAsString(jsAsString) {
     $("<script/>", { type: "application/javascript" })
-      .html(js)
+      .html(jsAsString)
       .appendTo("head");
   }
 });
